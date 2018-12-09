@@ -12,6 +12,9 @@
 <link href='https://fonts.googleapis.com/css?family=Roboto:700,500,300,100italic,100,400' rel='stylesheet' type='text/css'>
 <!-- lined-icons -->
 <link rel="stylesheet" href="/static/css/icon-font.min.css" type='text/css' />
+<!--tree-css -->
+<link rel="stylesheet" href="/static/css/layui.css">
+
 <!-- //lined-icons -->
 <script type="text/javascript" src="/static/js/jquery-3.2.1.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
@@ -34,6 +37,9 @@
 <script src="/static/js/jquery.easydropdown.js"></script>
 <!--//skycons-icons-->
 
+<!--tree-js -->
+<script src="/static/js/layui.js"></script>
+<script src="/static/js/tree.js"></script>
 
 
 <!--Tail JS-->

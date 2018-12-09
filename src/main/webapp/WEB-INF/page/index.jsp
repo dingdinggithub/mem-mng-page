@@ -43,6 +43,7 @@
 			<!-- //header-ends -->
 
             <!--inner content start-->
+           <%@include file="/WEB-INF/page/tree.jsp" %>
            <c:choose>
                <c:when test="${module == '1-1'}">
                    <%@include file="/WEB-INF/page/system/userList.jsp" %>
