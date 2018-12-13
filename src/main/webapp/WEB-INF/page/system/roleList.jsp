@@ -112,7 +112,7 @@
     function buildList(list) {
         //清空列表
         $("#tableList").empty();
-        var headCont = "<thead><tr><th>id</th> <th>类型名</th> <th>角色的类型，1：管理员角色，2：其他</th> <th>状态</th><th>操作</th></tr></thead>";
+        var headCont = "<thead><tr><th>id</th> <th>角色名</th> <th>角色的类型</th> <th>状态</th><th>操作</th></tr></thead>";
 
         $("#tableList").append(headCont);
         for ( var i = 0; i < list.length; i++) {

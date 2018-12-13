@@ -13,7 +13,7 @@
 <!-- lined-icons -->
 <link rel="stylesheet" href="/static/css/icon-font.min.css" type='text/css' />
 <!--tree-css -->
-<link rel="stylesheet" href="/static/css/layui.css">
+<link rel="stylesheet" href="/static/css/ztree_metroStyle/metroStyle.css">
 
 <!-- //lined-icons -->
 <script type="text/javascript" src="/static/js/jquery-3.2.1.js"></script>
@@ -41,6 +41,9 @@
 <script src="/static/js/layui.js"></script>
 <script src="/static/js/tree.js"></script>
 
+<script type="text/javascript" src="/static/js/ztree/jquery.ztree.core.js"></script>
+<script type="text/javascript" src="/static/js/ztree/jquery.ztree.excheck.js"></script>
+<script type="text/javascript" src="/static/js/ztree/jquery.ztree.exedit.js"></script>
 
 <!--Tail JS-->
 <!--js -->

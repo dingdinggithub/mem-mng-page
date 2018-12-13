@@ -133,6 +133,11 @@
                 list[i].id+
                 ")'>删除</a>" +
                 "</div>" +
+                "<div class='share share_size_large share_type_gplus'>" +
+                "<a class='share__btn' onclick = 'setRoleForUser(" +
+                list[i].id+
+                ")'>设置角色</a>" +
+                "</div>" +
                 "</td>" +
                 "</tr>" +
                 "</tbody>";
@@ -175,7 +180,6 @@
         $('#updateButtonId').click(function() {
 
             var formData=JSON.stringify($('#editFormlId').serializeJSON());
-
             $.ajax({
                 url: "http://localhost:8001/user/updateUser",
                 contentType: "application/json;charset=UTF-8",
@@ -246,6 +250,7 @@
             });
         });
     }
+
 
 </script>
 
