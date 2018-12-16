@@ -59,7 +59,8 @@
                </c:when>
            </c:choose>
 
-           <%@include file="/WEB-INF/page/mngAuthModule.jsp" %>
+           <%@include file="/WEB-INF/page/resultMessage.jsp" %>
+
             <!--inner content end-->
 
 			<!--footer section start-->
@@ -126,6 +127,80 @@
            toggle = !toggle;
        });
    </script>
+
+   <script>
+       <!--字典全局变量-->
+       var statusDirc;
+
+       $(document).ready(function() {
+           <!--获取状态字典-->
+           $.ajax({
+               url: "http://localhost:8001/dict/getStatus",
+               type: "get",
+               success: function (data) {
+                   if (data.success) {
+                       statusDirc = data.model;
+                   } else {
+                       $("#optResultContent").empty();
+                       $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                       $("#resultMessageModal").modal('show');
+                   }
+               },
+               error: function () {
+                   alert("请求失败")
+               }
+           });
+       });
+
+       <!--字典全局变量-->
+       var roleTypeDirc;
+
+       $(document).ready(function() {
+           <!--获取状态字典-->
+           $.ajax({
+               url: "http://localhost:8001/dict/getRoleType",
+               type: "get",
+               success: function (data) {
+                   if (data.success) {
+                       roleTypeDirc = data.model;
+                   } else {
+                       $("#optResultContent").empty();
+                       $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                       $("#resultMessageModal").modal('show');
+                   }
+               },
+               error: function () {
+                   alert("请求失败")
+               }
+           });
+       });
+
+       <!--字典全局变量-->
+       var authTypeDirc;
+
+       $(document).ready(function() {
+           <!--获取状态字典-->
+           $.ajax({
+               url: "http://localhost:8001/dict/getAuthType",
+               type: "get",
+               success: function (data) {
+                   if (data.success) {
+                       authTypeDirc = data.model;
+                   } else {
+                       $("#optResultContent").empty();
+                       $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                       $("#resultMessageModal").modal('show');
+                   }
+               },
+               error: function () {
+                   alert("请求失败")
+               }
+           });
+       });
+
+   </script>
+
+
 
    </div>
 	<div class="clearfix"></div>

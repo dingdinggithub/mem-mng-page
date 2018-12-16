@@ -5,14 +5,14 @@
     <div class="sub-heard-part">
         <ol class="breadcrumb m-b-0">
             <li><a href="index.html">系统</a></li>
-            <li class="active">权限模块关系管理</li>
+            <li class="active">权限管理</li>
         </ol>
     </div>
 <!--//sub-heard-part-->
     <div class="graph-visual tables-main">
         <h4 class="inner-tittle">
             <div class="share share_size_large share_type_twitter">
-                <a class="share__btn" href="#" data-toggle="modal" data-target="#createModal">新增权限模块关系</a>
+                <a class="share__btn" href="#" onclick="toCreatePage()">新增权限</a>
                 <span id="testSpan"></span>
             </div>
         </h4>
@@ -33,6 +33,29 @@
 
 <script type="text/javascript">
 
+    <!--字典全局变量-->
+    var moduleDirc;
+
+    $(document).ready(function() {
+        <!--获取状态字典-->
+        $.ajax({
+            url: "http://localhost:8001/dict/getModule",
+            type: "get",
+            success: function (data) {
+                if (data.success) {
+                    moduleDirc = data.model;
+                } else {
+                    $("#optResultContent").empty();
+                    $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                    $("#resultMessageModal").modal('show');
+                }
+            },
+            error: function () {
+                alert("请求失败")
+            }
+        });
+    });
+
     //页面刷新
     function flushPage() {
         <!--初始化列表-->
@@ -48,7 +71,9 @@
                     buildList(data.model);
                     buildPageParam(data);
                 } else {
-                    alert(data.errorMessage);
+                    $("#optResultContent").empty();
+                    $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                    $("#resultMessageModal").modal('show');
                 }
 
             },
@@ -96,7 +121,9 @@
                         buildList(data.model);
                         buildPageParam(data);
                     } else {
-                        alert(data.errorMessage);
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                        $("#resultMessageModal").modal('show');
                     }
 
                 },
@@ -112,18 +139,16 @@
     function buildList(list) {
         //清空列表
         $("#tableList").empty();
-        var headCont = "<thead><tr><th>id</th> <th>权限码</th> <th>权限名称</th> <th>权限所在的模块id</th> <th>请求的url</th> <th>类型，1：菜单，2：按钮，3：其他</th> <th>权限模块在当前层级下的顺序，由小到大</th> <th>状态，1：正常，0：冻结</th><th>操作</th></tr></thead>";
+        var headCont = "<thead><tr><th>权限名称</th> <th>所属模块</th> <th>请求的url</th> <th>类型</th><th>状态</th><th>操作</th></tr></thead>";
 
         $("#tableList").append(headCont);
         for ( var i = 0; i < list.length; i++) {
-            var cont = "<tbody><tr><td>" + list[i].id + "</td>";
-            cont = cont + "<td>" + list[i].code + "</td>";
+            var cont = "<tbody><tr>";
             cont = cont + "<td>" + list[i].name + "</td>";
-            cont = cont + "<td>" + list[i].moduleId + "</td>";
+            cont = cont + "<td>" + list[i].moduleName + "</td>";
             cont = cont + "<td>" + list[i].url + "</td>";
-            cont = cont + "<td>" + list[i].type + "</td>";
-            cont = cont + "<td>" + list[i].seq + "</td>";
-            cont = cont + "<td>" + list[i].status + "</td>";
+            cont = cont + "<td>" + list[i].typeDesc + "</td>";
+            cont = cont + "<td>" + list[i].statusDesc + "</td>";
             cont = cont + "<td><div class='share share_size_large share_type_twitter'>" +
                 "<button id='updateButtonId' class='share__btn' onclick = 'updateAuthModule(" +
                 list[i].id+
@@ -142,6 +167,30 @@
         }
     }
 
+    <!--前往新建页面-->
+    function toCreatePage() {
+        $('#createTypeId').empty();
+        var createAuthTypeStr = "";
+        for (var i = 0; i < authTypeDirc.length; i++) {
+            createAuthTypeStr = createAuthTypeStr + "<option value='";
+            createAuthTypeStr = createAuthTypeStr + authTypeDirc[i].code + "'>";
+            createAuthTypeStr = createAuthTypeStr + authTypeDirc[i].desc +"</option>";
+        }
+        $('#createTypeId').append(createAuthTypeStr);
+
+        $('#createModuleIdId').empty();
+        var moduleStr = "";
+        for (var i = 0; i < moduleDirc.length; i++) {
+            moduleStr = moduleStr + "<option value='";
+            moduleStr = moduleStr + moduleDirc[i].code + "'>";
+            moduleStr = moduleStr + moduleDirc[i].desc +"</option>";
+        }
+        $('#createModuleIdId').append(moduleStr);
+
+        $("#createModal").modal('show');
+    };
+
+
     $(document).ready(function() {
 
         flushPage();
@@ -158,12 +207,20 @@
                 dataType: "json",
                 data: formData,
                 success: function (data) {
-                    $("#createModal").modal('hide');
-                    alert("创建成功~~");
-                    flushPage();
+                    if(data.success) {
+                        $("#createModal").modal('hide');
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: green'>操作成功</div>");
+                        $("#resultMessageModal").modal('show');
+                        flushPage();
+                    } else {
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                        $("#resultMessageModal").modal('show');
+                    }
                 },
                 error: function (data) {
-                    alert(data.errorMessage);
+                    alert(data);
                 }
             });
 
@@ -186,10 +243,14 @@
                 success: function (data) {
                     $("#editModal").modal('hide');
                     if(data.success) {
-                        alert("更新成功~~");
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: green'>操作成功</div>");
+                        $("#resultMessageModal").modal('show');
                         flushPage();
                     } else {
-                        alert(data.errorMessage);
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                        $("#resultMessageModal").modal('show');
                     }
                 },
                 error: function () {
@@ -199,7 +260,6 @@
         });
 
     });
-
 
     <!--前往更新页面-->
     function updateAuthModule(primaryKey) {
@@ -211,13 +271,52 @@
                 success: function (data) {
                     var dataModel = data.model;
                     $('#editId').val(dataModel.id);
-                    $('#editCodeId').val(dataModel.code);
                     $('#editNameId').val(dataModel.name);
-                    $('#editModuleIdId').val(dataModel.moduleId);
+
+                    $('#editModuleIdId').empty();
+                    var moduleStr = "";
+                    for (var i = 0; i < moduleDirc.length; i++) {
+                        moduleStr = moduleStr + "<option value='";
+                        moduleStr = moduleStr + moduleDirc[i].code + "'";
+                        if (dataModel.moduleId == moduleDirc[i].code) {
+                            moduleStr = moduleStr + " selected = 'selected'>";
+                        } else {
+                            moduleStr = moduleStr + ">";
+                        }
+                        moduleStr = moduleStr + moduleDirc[i].desc +"</option>";
+                    }
+                    $('#editModuleIdId').append(moduleStr);
+
                     $('#editUrlId').val(dataModel.url);
-                    $('#editTypeId').val(dataModel.type);
-                    $('#editSeqId').val(dataModel.seq);
-                    $('#editStatusId').val(dataModel.status);
+
+                    $('#editTypeId').empty();
+                    var authTypeStr = "";
+                    for (var i = 0; i < authTypeDirc.length; i++) {
+                        authTypeStr = authTypeStr + "<option value='";
+                        authTypeStr = authTypeStr + authTypeDirc[i].code + "'";
+                        if (dataModel.type == authTypeDirc[i].code) {
+                            authTypeStr = authTypeStr + " selected = 'selected'>";
+                        } else {
+                            authTypeStr = authTypeStr + ">";
+                        }
+                        authTypeStr = authTypeStr + authTypeDirc[i].desc +"</option>";
+                    }
+                    $('#editTypeId').append(authTypeStr);
+
+                    $('#editStatusId').empty();
+                    var selectStr = "";
+                    for (var i = 0; i < statusDirc.length; i++) {
+                        selectStr = selectStr + "<option value='";
+                        selectStr = selectStr + statusDirc[i].code + "'";
+                        if (dataModel.status == statusDirc[i].code) {
+                            selectStr = selectStr + " selected = 'selected'>";
+                        } else {
+                            selectStr = selectStr + ">";
+                        }
+                        selectStr = selectStr + statusDirc[i].desc +"</option>";
+                    }
+                    $('#editStatusId').append(selectStr);
+
                     $("#editModal").modal('show');
                 },
                 error: function () {
@@ -236,10 +335,14 @@
                 type: "get",
                 success: function (data) {
                     if(data.success) {
-                        alert("删除成功~~");
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: green'>操作成功</div>");
+                        $("#resultMessageModal").modal('show');
                         flushPage();
                     } else {
-                        alert(data.errorMessage);
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                        $("#resultMessageModal").modal('show');
                     }
                 },
                 error: function () {
@@ -260,7 +363,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
                 </button>
                 <h4 class="modal-title" id="editModalLabel">
-                    更新用户信息
+                    更新权限
                 </h4>
             </div>
             <div class="modal-body">
@@ -274,12 +377,6 @@
                                         <form class="form-horizontal" id="editFormlId">
                                             <input name="id" type="hidden" class="form-control" id="editId">
                                             <div class="form-group">
-                                                <label class="col-sm-2 control-label">code</label>
-                                                <div class="col-sm-9">
-                                                    <input name="code" type="text" class="form-control" placeholder="code" id="editCodeId">
-                                                </div>
-                                            </div>
-                                            <div class="form-group">
                                                 <label class="col-sm-2 control-label">name</label>
                                                 <div class="col-sm-9">
                                                     <input name="name" type="text" class="form-control" placeholder="name" id="editNameId">
@@ -288,7 +385,9 @@
                                             <div class="form-group">
                                                 <label class="col-sm-2 control-label">moduleId</label>
                                                 <div class="col-sm-9">
-                                                    <input name="moduleId" type="text" class="form-control" placeholder="moduleId" id="editModuleIdId">
+                                                    <select name="moduleId" id="editModuleIdId" class="form-control1">
+                                                        <option selected = selected></option>
+                                                    </select>
                                                 </div>
                                             </div>
                                             <div class="form-group">
@@ -297,22 +396,20 @@
                                                     <input name="url" type="text" class="form-control" placeholder="url" id="editUrlId">
                                                 </div>
                                             </div>
+
                                             <div class="form-group">
                                                 <label class="col-sm-2 control-label">type</label>
-                                                <div class="col-sm-9">
-                                                    <input name="type" type="text" class="form-control" placeholder="type" id="editTypeId">
+                                                <div class="col-sm-8">
+                                                    <select name="type" id="editTypeId" class="form-control1">
+                                                    </select>
                                                 </div>
                                             </div>
                                             <div class="form-group">
-                                                <label class="col-sm-2 control-label">seq</label>
-                                                <div class="col-sm-9">
-                                                    <input name="seq" type="text" class="form-control" placeholder="seq" id="editSeqId">
-                                                </div>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="col-sm-2 control-label">status</label>
-                                                <div class="col-sm-9">
-                                                    <input name="status" type="text" class="form-control" placeholder="status" id="editStatusId">
+                                                <label for="editStatusId" class="col-sm-2 control-label">status</label>
+                                                <div class="col-sm-8">
+                                                    <select name="status" id="editStatusId" class="form-control1">
+                                                        <option selected = selected></option>
+                                                    </select>
                                                 </div>
                                             </div>
                                         </form>
@@ -349,7 +446,7 @@
                     &times;
                 </button>
                 <h4 class="modal-title" id="createModalLabel">
-                    创建用户信息
+                    创建权限
                 </h4>
             </div>
             <div class="modal-body">
@@ -362,13 +459,6 @@
                             <div class="grid-1">
                                 <div class="form-body">
                                     <form class="form-horizontal" id="createFormId">
-
-                                        <div class="form-group">
-                                            <label class="col-sm-2 control-label">code</label>
-                                            <div class="col-sm-9">
-                                                <input name="code" type="text" class="form-control" placeholder="code">
-                                            </div>
-                                        </div>
                                         <div class="form-group">
                                             <label class="col-sm-2 control-label">name</label>
                                             <div class="col-sm-9">
@@ -378,7 +468,8 @@
                                         <div class="form-group">
                                             <label class="col-sm-2 control-label">moduleId</label>
                                             <div class="col-sm-9">
-                                                <input name="moduleId" type="text" class="form-control" placeholder="moduleId">
+                                                <select name="moduleId" id="createModuleIdId" class="form-control1">
+                                                </select>
                                             </div>
                                         </div>
                                         <div class="form-group">
@@ -389,20 +480,9 @@
                                         </div>
                                         <div class="form-group">
                                             <label class="col-sm-2 control-label">type</label>
-                                            <div class="col-sm-9">
-                                                <input name="type" type="text" class="form-control" placeholder="type">
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="col-sm-2 control-label">seq</label>
-                                            <div class="col-sm-9">
-                                                <input name="seq" type="text" class="form-control" placeholder="seq">
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="col-sm-2 control-label">status</label>
-                                            <div class="col-sm-9">
-                                                <input name="status" type="text" class="form-control" placeholder="status">
+                                            <div class="col-sm-8">
+                                                <select name="type" id="createTypeId" class="form-control1">
+                                                </select>
                                             </div>
                                         </div>
 

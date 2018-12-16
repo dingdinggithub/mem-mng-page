@@ -33,6 +33,29 @@
 
 <script type="text/javascript">
 
+    <!--字典全局变量-->
+    var statusDirc;
+
+    $(document).ready(function() {
+        <!--获取状态字典-->
+        $.ajax({
+            url: "http://localhost:8001/dict/getStatus",
+            type: "get",
+            success: function (data) {
+                if (data.success) {
+                    statusDirc = data.model;
+                } else {
+                    $("#optResultContent").empty();
+                    $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                    $("#resultMessageModal").modal('show');
+                }
+            },
+            error: function () {
+                alert("请求失败")
+            }
+        });
+    });
+
     //页面刷新
     function flushPage() {
         <!--初始化列表-->
@@ -48,7 +71,9 @@
                     buildList(data.model);
                     buildPageParam(data);
                 } else {
-                    alert(data.errorMessage);
+                    $("#optResultContent").empty();
+                    $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                    $("#resultMessageModal").modal('show');
                 }
 
             },
@@ -96,7 +121,9 @@
                         buildList(data.model);
                         buildPageParam(data);
                     } else {
-                        alert(data.errorMessage);
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                        $("#resultMessageModal").modal('show');
                     }
 
                 },
@@ -112,16 +139,16 @@
     function buildList(list) {
         //清空列表
         $("#tableList").empty();
-        var headCont = "<thead><tr><th>id</th> <th>权限模块名称</th> <th>上级权限模块id</th> <th>权限模块层级</th> <th>权限模块在当前层级下的顺序，由小到大</th> <th>状态，1：正常，0：冻结</th><th>操作</th></tr></thead>";
+        var headCont = "<thead><tr><th>模块名称</th> <th>上级模块</th> <th>模块层级</th> <th>模块层级顺序</th> <th>状态</th><th>操作</th></tr></thead>";
 
         $("#tableList").append(headCont);
         for ( var i = 0; i < list.length; i++) {
-            var cont = "<tbody><tr><td>" + list[i].id + "</td>";
+            var cont = "<tbody><tr>";
             cont = cont + "<td>" + list[i].name + "</td>";
             cont = cont + "<td>" + list[i].parentId + "</td>";
             cont = cont + "<td>" + list[i].level + "</td>";
             cont = cont + "<td>" + list[i].seq + "</td>";
-            cont = cont + "<td>" + list[i].status + "</td>";
+            cont = cont + "<td>" + list[i].statusDesc + "</td>";
             cont = cont + "<td><div class='share share_size_large share_type_twitter'>" +
                 "<button id='updateButtonId' class='share__btn' onclick = 'updateModule(" +
                 list[i].id+
@@ -156,12 +183,22 @@
                 dataType: "json",
                 data: formData,
                 success: function (data) {
-                    $("#createModal").modal('hide');
-                    alert("创建成功~~");
-                    flushPage();
+
+                    if(data.success) {
+                        $("#createModal").modal('hide');
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: green'>操作成功</div>");
+                        $("#resultMessageModal").modal('show');
+                        flushPage();
+                    } else {
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                        $("#resultMessageModal").modal('show');
+                    }
+
                 },
                 error: function (data) {
-                    alert(data.errorMessage);
+                    alert(data);
                 }
             });
 
@@ -184,10 +221,14 @@
                 success: function (data) {
                     $("#editModal").modal('hide');
                     if(data.success) {
-                        alert("更新成功~~");
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: green'>操作成功</div>");
+                        $("#resultMessageModal").modal('show');
                         flushPage();
                     } else {
-                        alert(data.errorMessage);
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                        $("#resultMessageModal").modal('show');
                     }
                 },
                 error: function () {
@@ -207,14 +248,34 @@
                 url: "http://localhost:8001/module/queryModule?id="+primaryKey,
                 type: "get",
                 success: function (data) {
-                    var dataModel = data.model;
-                    $('#editId').val(dataModel.id);
-                    $('#editNameId').val(dataModel.name);
-                    $('#editParentIdId').val(dataModel.parentId);
-                    $('#editLevelId').val(dataModel.level);
-                    $('#editSeqId').val(dataModel.seq);
-                    $('#editStatusId').val(dataModel.status);
-                    $("#editModal").modal('show');
+                    if (data.success) {
+                        var dataModel = data.model;
+                        $('#editId').val(dataModel.id);
+                        $('#editNameId').val(dataModel.name);
+                        $('#editParentIdId').val(dataModel.parentId);
+                        $('#editLevelId').val(dataModel.level);
+                        $('#editSeqId').val(dataModel.seq);
+
+                        $('#editStatusId').empty();
+                        var selectStr = "";
+                        for (var i = 0; i < statusDirc.length; i++) {
+                            selectStr = selectStr + "<option value='";
+                            selectStr = selectStr + statusDirc[i].code + "'";
+                            if (dataModel.status == statusDirc[i].code) {
+                                selectStr = selectStr + " selected = 'selected'>";
+                            } else {
+                                selectStr = selectStr + ">";
+                            }
+                            selectStr = selectStr + statusDirc[i].desc + "</option>";
+                        }
+                        $('#editStatusId').append(selectStr);
+
+                        $("#editModal").modal('show');
+                    } else {
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>请求失败<br/>原因: "+data.errorMessage+"</div>");
+                        $("#resultMessageModal").modal('show');
+                    }
                 },
                 error: function () {
                     alert("请求访问异常！！！");
@@ -232,10 +293,14 @@
                 type: "get",
                 success: function (data) {
                     if(data.success) {
-                        alert("删除成功~~");
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: green'>操作成功</div>");
+                        $("#resultMessageModal").modal('show');
                         flushPage();
                     } else {
-                        alert(data.errorMessage);
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                        $("#resultMessageModal").modal('show');
                     }
                 },
                 error: function () {
@@ -256,7 +321,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
                 </button>
                 <h4 class="modal-title" id="editModalLabel">
-                    更新用户信息
+                    更新模块
                 </h4>
             </div>
             <div class="modal-body">
@@ -294,9 +359,11 @@
                                                 </div>
                                             </div>
                                             <div class="form-group">
-                                                <label class="col-sm-2 control-label">status</label>
-                                                <div class="col-sm-9">
-                                                    <input name="status" type="text" class="form-control" placeholder="status" id="editStatusId">
+                                                <label for="editStatusId" class="col-sm-2 control-label">status</label>
+                                                <div class="col-sm-8">
+                                                    <select name="status" id="editStatusId" class="form-control1">
+                                                        <option selected = selected></option>
+                                                    </select>
                                                 </div>
                                             </div>
                                         </form>
@@ -333,7 +400,7 @@
                     &times;
                 </button>
                 <h4 class="modal-title" id="createModalLabel">
-                    创建用户信息
+                    创建模块
                 </h4>
             </div>
             <div class="modal-body">
@@ -369,12 +436,6 @@
                                             <label class="col-sm-2 control-label">seq</label>
                                             <div class="col-sm-9">
                                                 <input name="seq" type="text" class="form-control" placeholder="seq">
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="col-sm-2 control-label">status</label>
-                                            <div class="col-sm-9">
-                                                <input name="status" type="text" class="form-control" placeholder="status">
                                             </div>
                                         </div>
 

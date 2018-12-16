@@ -12,7 +12,7 @@
     <div class="graph-visual tables-main">
         <h4 class="inner-tittle">
             <div class="share share_size_large share_type_twitter">
-                <a class="share__btn" href="#" data-toggle="modal" data-target="#createModal">新增角色</a>
+                <a class="share__btn" href="#" onclick="toCreatePage()">新增角色</a>
                 <span id="testSpan"></span>
             </div>
         </h4>
@@ -48,7 +48,9 @@
                     buildList(data.model);
                     buildPageParam(data);
                 } else {
-                    alert(data.errorMessage);
+                    $("#optResultContent").empty();
+                    $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                    $("#resultMessageModal").modal('show');
                 }
 
             },
@@ -96,7 +98,9 @@
                         buildList(data.model);
                         buildPageParam(data);
                     } else {
-                        alert(data.errorMessage);
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                        $("#resultMessageModal").modal('show');
                     }
 
                 },
@@ -112,14 +116,14 @@
     function buildList(list) {
         //清空列表
         $("#tableList").empty();
-        var headCont = "<thead><tr><th>id</th> <th>角色名</th> <th>角色的类型</th> <th>状态</th><th>操作</th></tr></thead>";
+        var headCont = "<thead><tr><th>角色名</th> <th>角色的类型</th> <th>状态</th><th>操作</th></tr></thead>";
 
         $("#tableList").append(headCont);
         for ( var i = 0; i < list.length; i++) {
-            var cont = "<tbody><tr><td>" + list[i].id + "</td>";
+            var cont = "<tbody><tr>";
             cont = cont + "<td>" + list[i].name + "</td>";
-            cont = cont + "<td>" + list[i].type + "</td>";
-            cont = cont + "<td>" + list[i].status + "</td>";
+            cont = cont + "<td>" + list[i].typeDesc + "</td>";
+            cont = cont + "<td>" + list[i].statusDesc + "</td>";
             cont = cont + "<td><div class='share share_size_large share_type_twitter'>" +
                 "<button id='updateButtonId' class='share__btn' onclick = 'updateRole(" +
                 list[i].id+
@@ -129,6 +133,11 @@
                 "<a class='share__btn' onclick = 'deleteRole(" +
                 list[i].id+
                 ")'>删除</a>" +
+                "</div>"  +
+                "<div class='share share_size_large share_type_gplus'>" +
+                "<a class='share__btn' onclick = 'setAuthForRole(" +
+                list[i].id+
+                ")'>设置权限</a>" +
                 "</div>" +
                 "</td>" +
                 "</tr>" +
@@ -137,6 +146,20 @@
             $("#tableList").append(cont);
         }
     }
+
+    <!--前往新建页面-->
+    function toCreatePage() {
+        $('#createTypeId').empty();
+        var selectTypeStr = "";
+        for (var i = 0; i < roleTypeDirc.length; i++) {
+            selectTypeStr = selectTypeStr + "<option value='";
+            selectTypeStr = selectTypeStr + roleTypeDirc[i].code + "'>";
+            selectTypeStr = selectTypeStr + roleTypeDirc[i].desc +"</option>";
+        }
+        $('#createTypeId').append(selectTypeStr);
+
+        $("#createModal").modal('show');
+    };
 
     $(document).ready(function() {
 
@@ -154,12 +177,20 @@
                 dataType: "json",
                 data: formData,
                 success: function (data) {
-                    $("#createModal").modal('hide');
-                    alert("创建成功~~");
-                    flushPage();
+                    if (data.success) {
+                        $("#createModal").modal('hide');
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: green'>操作成功</div>");
+                        $("#resultMessageModal").modal('show');
+                        flushPage();
+                    } else {
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                        $("#resultMessageModal").modal('show');
+                    }
                 },
                 error: function (data) {
-                    alert(data.errorMessage);
+                    alert(data);
                 }
             });
 
@@ -182,10 +213,14 @@
                 success: function (data) {
                     $("#editModal").modal('hide');
                     if(data.success) {
-                        alert("更新成功~~");
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: green'>操作成功</div>");
+                        $("#resultMessageModal").modal('show');
                         flushPage();
                     } else {
-                        alert(data.errorMessage);
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                        $("#resultMessageModal").modal('show');
                     }
                 },
                 error: function () {
@@ -205,12 +240,46 @@
                 url: "http://localhost:8001/role/queryRole?id="+primaryKey,
                 type: "get",
                 success: function (data) {
-                    var dataModel = data.model;
-                    $('#editId').val(dataModel.id);
-                    $('#editNameId').val(dataModel.name);
-                    $('#editTypeId').val(dataModel.type);
-                    $('#editStatusId').val(dataModel.status);
-                    $("#editModal").modal('show');
+                    if (data.success) {
+                        var dataModel = data.model;
+                        $('#editId').val(dataModel.id);
+                        $('#editNameId').val(dataModel.name);
+
+
+                        $('#editTypeId').empty();
+                        var selectTypeStr = "";
+                        for (var i = 0; i < roleTypeDirc.length; i++) {
+                            selectTypeStr = selectTypeStr + "<option value='";
+                            selectTypeStr = selectTypeStr + roleTypeDirc[i].code + "'";
+                            if (dataModel.type == roleTypeDirc[i].code) {
+                                selectTypeStr = selectTypeStr + " selected = 'selected'>";
+                            } else {
+                                selectTypeStr = selectTypeStr + ">";
+                            }
+                            selectTypeStr = selectTypeStr + roleTypeDirc[i].desc +"</option>";
+                        }
+                        $('#editTypeId').append(selectTypeStr);
+
+                        $('#editStatusId').empty();
+                        var selectStr = "";
+                        for (var i = 0; i < statusDirc.length; i++) {
+                            selectStr = selectStr + "<option value='";
+                            selectStr = selectStr + statusDirc[i].code + "'";
+                            if (dataModel.status == statusDirc[i].code) {
+                                selectStr = selectStr + " selected = 'selected'>";
+                            } else {
+                                selectStr = selectStr + ">";
+                            }
+                            selectStr = selectStr + statusDirc[i].desc + "</option>";
+                        }
+                        $('#editStatusId').append(selectStr);
+
+                        $("#editModal").modal('show');
+                    } else {
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                        $("#resultMessageModal").modal('show');
+                    }
                 },
                 error: function () {
                     alert("请求访问异常！！！");
@@ -228,10 +297,14 @@
                 type: "get",
                 success: function (data) {
                     if(data.success) {
-                        alert("删除成功~~");
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: green'>操作成功</div>");
+                        $("#resultMessageModal").modal('show');
                         flushPage();
                     } else {
-                        alert(data.errorMessage);
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                        $("#resultMessageModal").modal('show');
                     }
                 },
                 error: function () {
@@ -243,6 +316,7 @@
 
 </script>
 
+<%@include file="/WEB-INF/page/mngRoleAuth.jsp" %>
 
 <!--编辑弹窗页面-->
 <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
@@ -271,16 +345,21 @@
                                                     <input name="name" type="text" class="form-control" placeholder="name" id="editNameId">
                                                 </div>
                                             </div>
+
                                             <div class="form-group">
                                                 <label class="col-sm-2 control-label">type</label>
-                                                <div class="col-sm-9">
-                                                    <input name="type" type="text" class="form-control" placeholder="type" id="editTypeId">
+                                                <div class="col-sm-8">
+                                                    <select name="type" id="editTypeId" class="form-control1">
+                                                    </select>
                                                 </div>
                                             </div>
+
                                             <div class="form-group">
-                                                <label class="col-sm-2 control-label">status</label>
-                                                <div class="col-sm-9">
-                                                    <input name="status" type="text" class="form-control" placeholder="status" id="editStatusId">
+                                                <label for="editStatusId" class="col-sm-2 control-label">status</label>
+                                                <div class="col-sm-8">
+                                                    <select name="status" id="editStatusId" class="form-control1">
+                                                        <option selected = selected></option>
+                                                    </select>
                                                 </div>
                                             </div>
                                         </form>
@@ -314,7 +393,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-                    &times;
+                    x
                 </button>
                 <h4 class="modal-title" id="createModalLabel">
                     创建用户信息
@@ -339,14 +418,9 @@
                                         </div>
                                         <div class="form-group">
                                             <label class="col-sm-2 control-label">type</label>
-                                            <div class="col-sm-9">
-                                                <input name="type" type="text" class="form-control" placeholder="type">
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="col-sm-2 control-label">status</label>
-                                            <div class="col-sm-9">
-                                                <input name="status" type="text" class="form-control" placeholder="status">
+                                            <div class="col-sm-8">
+                                                <select name="type" id="createTypeId" class="form-control1">
+                                                </select>
                                             </div>
                                         </div>
 

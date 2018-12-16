@@ -48,7 +48,9 @@
                     buildList(data.model);
                     buildPageParam(data);
                 } else {
-                    alert(data.errorMessage);
+                    $("#optResultContent").empty();
+                    $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                    $("#resultMessageModal").modal('show');
                 }
 
             },
@@ -77,6 +79,7 @@
         $("#pageStyleId").append(pageCont);
     }
 
+
     //翻页动作
     function prePageFun(pageIndex) {
 
@@ -96,7 +99,9 @@
                         buildList(data.model);
                         buildPageParam(data);
                     } else {
-                        alert(data.errorMessage);
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                        $("#resultMessageModal").modal('show');
                     }
 
                 },
@@ -104,6 +109,7 @@
                     alert("请求失败")
                 }
             });
+
         });
     }
 
@@ -112,14 +118,13 @@
     function buildList(list) {
         //清空列表
         $("#tableList").empty();
-        var headCont = "<thead><tr><th>id</th> <th>用户名</th> <th>用户密码</th> <th>用户状态</th> <th>手机号</th> <th>邮箱</th> <th>部门id</th><th>操作</th></tr></thead>";
+        var headCont = "<thead><tr><th>用户名</th><th>用户状态</th> <th>手机号</th> <th>邮箱</th> <th>部门id</th><th>操作</th></tr></thead>";
 
         $("#tableList").append(headCont);
         for ( var i = 0; i < list.length; i++) {
-            var cont = "<tbody><tr><td>" + list[i].id + "</td>";
+            var cont = "<tbody><tr>";
             cont = cont + "<td>" + list[i].username + "</td>";
-            cont = cont + "<td>" + list[i].password + "</td>";
-            cont = cont + "<td>" + list[i].status + "</td>";
+            cont = cont + "<td>" + list[i].statusDesc + "</td>";
             cont = cont + "<td>" + list[i].telephone + "</td>";
             cont = cont + "<td>" + list[i].mail + "</td>";
             cont = cont + "<td>" + list[i].deptId + "</td>";
@@ -162,18 +167,25 @@
                 dataType: "json",
                 data: formData,
                 success: function (data) {
-                    $("#createModal").modal('hide');
-                    alert("创建成功~~");
-                    flushPage();
+
+                    if(data.success) {
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: green'>操作成功</div>");
+                        $("#resultMessageModal").modal('show');
+
+                        $("#createModal").modal('hide');
+                        flushPage();
+                    } else {
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                        $("#resultMessageModal").modal('show');
+                    }
                 },
                 error: function (data) {
-                    alert(data.errorMessage);
+                    alert(data);
                 }
             });
 
-            /*$.when(createAjax).done(function () {
-
-            });*/
         });
 
         <!--更新操作-->
@@ -187,12 +199,18 @@
                 dataType: "json",
                 data: formData,
                 success: function (data) {
-                    $("#editModal").modal('hide');
                     if(data.success) {
-                        alert("更新成功~~");
+
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: green'>操作成功</div>");
+                        $("#resultMessageModal").modal('show');
+
+                        $("#editModal").modal('hide');
                         flushPage();
                     } else {
-                        alert(data.errorMessage);
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                        $("#resultMessageModal").modal('show');
                     }
                 },
                 error: function () {
@@ -203,20 +221,33 @@
 
     });
 
-
     <!--前往更新页面-->
     function updateUser(primaryKey) {
         $(document).ready(function() {
-            <!--新建列表-->
             $.ajax({
                 url: "http://localhost:8001/user/queryUser?id="+primaryKey,
                 type: "get",
                 success: function (data) {
                     var dataModel = data.model;
+
                     $('#editId').val(dataModel.id);
                     $('#editUsernameId').val(dataModel.username);
-                    $('#editPasswordId').val(dataModel.password);
-                    $('#editStatusId').val(dataModel.status);
+
+                    $('#editStatusId').empty();
+                    var selectStr = "";
+                    for (var i = 0; i < statusDirc.length; i++) {
+                        selectStr = selectStr + "<option value='";
+                        selectStr = selectStr + statusDirc[i].code + "'";
+                        if (dataModel.status == statusDirc[i].code) {
+                            selectStr = selectStr + " selected = 'selected'>";
+                        } else {
+                            selectStr = selectStr + ">";
+                        }
+                        selectStr = selectStr + statusDirc[i].desc +"</option>";
+                    }
+
+                    $('#editStatusId').append(selectStr);
+
                     $('#editTelephoneId').val(dataModel.telephone);
                     $('#editMailId').val(dataModel.mail);
                     $('#editDeptIdId').val(dataModel.deptId);
@@ -238,10 +269,14 @@
                 type: "get",
                 success: function (data) {
                     if(data.success) {
-                        alert("删除成功~~");
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: green'>操作成功</div>");
+                        $("#resultMessageModal").modal('show');
                         flushPage();
                     } else {
-                        alert(data.errorMessage);
+                        $("#optResultContent").empty();
+                        $("#optResultContent").append("<div style='display:block; text-align: center;color: red'>操作失败<br/>原因: "+data.errorMessage+"</div>");
+                        $("#resultMessageModal").modal('show');
                     }
                 },
                 error: function () {
@@ -254,6 +289,7 @@
 
 </script>
 
+<%@include file="/WEB-INF/page/mngUserRole.jsp" %>
 
 <!--编辑弹窗页面-->
 <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
@@ -282,16 +318,13 @@
                                                     <input name="username" type="text" class="form-control" placeholder="username" id="editUsernameId">
                                                 </div>
                                             </div>
+
                                             <div class="form-group">
-                                                <label class="col-sm-2 control-label">password</label>
-                                                <div class="col-sm-9">
-                                                    <input name="password" type="text" class="form-control" placeholder="password" id="editPasswordId">
-                                                </div>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="col-sm-2 control-label">status</label>
-                                                <div class="col-sm-9">
-                                                    <input name="status" type="text" class="form-control" placeholder="status" id="editStatusId">
+                                                <label for="editStatusId" class="col-sm-2 control-label">status</label>
+                                                <div class="col-sm-8">
+                                                    <select name="status" id="editStatusId" class="form-control1">
+                                                        <option selected = selected></option>
+                                                    </select>
                                                 </div>
                                             </div>
                                             <div class="form-group">
@@ -370,12 +403,6 @@
                                             <label class="col-sm-2 control-label">password</label>
                                             <div class="col-sm-9">
                                                 <input name="password" type="text" class="form-control" placeholder="password">
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="col-sm-2 control-label">status</label>
-                                            <div class="col-sm-9">
-                                                <input name="status" type="text" class="form-control" placeholder="status">
                                             </div>
                                         </div>
                                         <div class="form-group">
